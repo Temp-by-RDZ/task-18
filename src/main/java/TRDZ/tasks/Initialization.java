@@ -12,7 +12,7 @@ import java.util.HashSet;
 public class Initialization
 	{
 	public static int limit = 5;				//Лимит вместимости группы
-	public static boolean fractional = true; 	//Вес веще генерировать в дробном формате?
+	public static boolean fractional = true; 	//Вес вещей генерировать в дробном формате?
 	public static boolean sorting = false;		//В динамическом подходе с выводом сортировать список? (К времени выполнения будет добавлено время сортировки)
 
 	public static void main(String[] args) {
