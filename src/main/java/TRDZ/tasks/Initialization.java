@@ -13,13 +13,14 @@ public class Initialization
 	{
 	public static int limit = 5;				//Лимит вместимости группы
 	public static boolean fractional = true; 	//Вес веще генерировать в дробном формате?
+	public static boolean sorting = false;		//В динамическом подходе с выводом сортировать список? (К времени выполнения будет добавлено время сортировки)
 
 	public static void main(String[] args) {
 		ArrayList<Item> Items = generate(10);
 		System.out.printf("1. Возведенное в степень %.2f число %d = %.2f\n",-0.5,2,step(2,-0.5));
-		System.out.print("2. Вычисление заполнения рюкзака.");
+		System.out.println("2. Вычисление заполнения рюкзака.");
 		boolean show = true; 		//Выводить ли значения массива?
-		boolean show2 = true; 		//Выводить ли состав группы?
+		boolean show2 = false; 		//Выводить ли состав группы?
 		Items_sort(Items);
 		if (show) {
 			System.out.print("Сгенерированный набор вещей ");
@@ -37,10 +38,27 @@ public class Initialization
 			long endTime = System.currentTimeMillis();
 			System.out.println("Затраченное время: " + (endTime - startTime));
 			}
+		System.out.printf("Поиск значения наилучшей группы среди %d элементов при лимите в %d способом перебора рекурсией.\n",Items.size(),limit);
+		long startTime = System.currentTimeMillis();
+		if (fractional) System.out.println("  Сумма наилучшей группы - "+classic(Items,Items.size(),limit*100));
+		else System.out.println("  Сумма наилучшей группы - "+classic(Items,Items.size(),limit*100));
+		long endTime = System.currentTimeMillis();
+		System.out.println("Затраченное время: " + (endTime - startTime));
 		}
 
 	/**
-	 * Вычисление суммы наилучшей группы
+	 * Вычисление суммы наилучшей группы путем перебора
+	 * @param Items Список элементов
+	 * @param capacity Размер для формирования группы
+	 */
+	public static int classic(ArrayList<Item> Items, int total, int capacity) {
+		if (total<=0) return 0;
+		else if (Items.get(total-1).getWeight()>capacity) return classic(Items,total-1,capacity);
+		else return Math.max(classic(Items,total-1,capacity), Items.get(total-1).getCost()+classic(Items,total-1,capacity-Items.get(total-1).getWeight()));
+		}
+
+	/**
+	 * Вычисление суммы наилучшей группы с подходом динамического программирования
 	 * @param Items Список элементов, во избежание оптимизации
 	 * способной повлиять на замеры дублируется.
 	 * @param capacity Размер для формирования группы
@@ -55,7 +73,6 @@ public class Initialization
 			}
 	//region Вычисляем таблицу для первого элемента
 	//endregion
-		Items_sort_byValue(Items_obr);
 		int[][] Dynamic_map = new int[Items_obr.size()][capacity+1];
 		for (int j = 1; j < Dynamic_map[0].length; j++) {//Вес
 			if (Items_obr.get(0).getWeight()<=j) Dynamic_map[0][j]=Items_obr.get(0).getCost();
@@ -64,8 +81,8 @@ public class Initialization
 	//region Вычисляем всю таблицу заполнения
 		for (int i=1; i<Dynamic_map.length; i++) {//Вещь
 			for (int j = 1; j < Dynamic_map[0].length; j++) {//Вес
-				if ((int)Items_obr.get(i).getWeight()<=j) {
-					Dynamic_map[i][j]=Math.max(Dynamic_map[i-1][j],Items_obr.get(i).getCost()+Dynamic_map[i-1][Math.max(0,j-(int)Items_obr.get(i).getWeight())]);}
+				if (Items_obr.get(i).getWeight()<=j) {
+					Dynamic_map[i][j]=Math.max(Dynamic_map[i-1][j],Items_obr.get(i).getCost()+Dynamic_map[i-1][Math.max(0,j-Items_obr.get(i).getWeight())]);}
 				else Dynamic_map[i][j]=Dynamic_map[i-1][j];
 				}
 			}
@@ -74,7 +91,7 @@ public class Initialization
 		}
 
 	/**
-	 * Вычисление наилучшей группы
+	 * Вычисление наилучшей группы с подходом динамического программирования
 	 * @param Items Список элементов, во избежание оптимизации
 	 * способной повлиять на замеры дублируется.
 	 * @param capacity Размер для формирования группы
@@ -89,7 +106,7 @@ public class Initialization
 			if (Items.get(i).getWeight()<=capacity) Items_obr.add(Items.get(i));
 			}
 	//endregion
-		Items_sort_byValue(Items_obr);
+		if (sorting) Items_sort_byValue(Items_obr);
 		int[][] Dynamic_map = new int[Items_obr.size()][capacity+1];
 		if (Items_obr.size()==0) {System.out.println("  Все вещи были слишком большими и тяжелыми для текущего лимита"); return;}
 		HashSet<Item> tek = new HashSet<>();
